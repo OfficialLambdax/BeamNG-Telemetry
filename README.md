@@ -240,6 +240,10 @@ Exact unit describtions can currently only be found in the [collection script](h
 
 For parser versioning a `_VERSION` key is attached to the root of each readout.
 
+## Support
+Tested with the mayor version 0.35 of BeamNG.
+This mod only ever just supports the latest version of BeamNG.*tech/drive*
+
 ## Installation Instructions
 This assumes that you already have a BeamMP Server setup ([documentation](https://docs.beammp.com/server/create-a-server)) and the BeamMP Launcher installed on the same machine as BeamNG.*tech/drive* is installed ([documentation](https://docs.beammp.com/game/getting-started/#1-compatibility)).
 
