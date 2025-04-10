@@ -13,9 +13,9 @@ This script was made as an alternate to [BeamNGPy](https://github.com/BeamNG/Bea
 ## Currently Collects the following data
 - General vehicle config data, such as the vehicle name and id
 - General vehicle data, such as the position and rotation
-- General eletric values, such as what electric controllers can be found on the vehicle and if they are active and acting
+- General electric values, such as what electric controllers can be found on the vehicle and if they are active and acting
 - Input values, such as throttle and brake
-- Wheel values, such as the in contact ground model (Asphalt, dirt), wheel speed, slip and various brakes data
+- Wheel values, such as the in contact ground model (Asphalt, dirt), wheel speed, slip and various brake data
 - Energy values, such as the available fluid tanks and volumes (think of a gasoline fuel tank)
 
 <details>
@@ -259,3 +259,6 @@ By default the Telemetry is disabled. To activate it you have to configure a key
 
 ## Readout location
 At default the Server side telemetry script that receives the telemetry from all clients stores them to files that can be found right next to your BeamMP Server's workfolder. `./readouts`. This path can be changed in the [Server side](https://github.com/OfficialLambdax/BeamNG-Telemetry/blob/main/Server/Telemetry/main.lua) script.
+
+## Final note
+This telemetry script does by far not collect all data that BeamNG.*tech/drive* make available. If are looking for any further data then either feel free to add it yourself or open a [Issue](https://github.com/OfficialLambdax/BeamNG-Telemetry/issues)
