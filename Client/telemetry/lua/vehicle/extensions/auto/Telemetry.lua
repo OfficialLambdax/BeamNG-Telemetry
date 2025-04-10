@@ -26,12 +26,25 @@ local _DATA_VERSION = 1
 -- Leave this at 0 to fetch data every frame
 local FETCH_EVERY = 0 -- ms
 
+local COLLECT_CONFIG = true
+local COLLECT_GENERAL = true
+local COLLECT_ELECTRICS = true
+local COLLECT_INPUTS = true
+local COLLECT_WHEELS = true
+local COLLECT_ENERGY = true
+--local COLLECT_SUSPENSION = true
+--local COLLECT_ENGINE = true
+--local COLLECT_TRANSMISSION = true
 
 -- ----------------------------------
 -- Internal
 local FETCH_TIMER = HighPerfTimer()
 local LIFE_TIMER = HighPerfTimer()
+local INIT_STAGE = 0
 local INITIALIZED = false
+local GAME_VERSION = ''
+local IS_OWN = false
+local DO_READOUT = false
 
 -- ----------------------------------
 -- Measurement variables
@@ -73,9 +86,11 @@ local function collectConfig()
 end
 
 local function collectGeneral()
+	--local rot_x, rot_y, rot_z, rot_w = obj:getRotation()
 	return {
 		pos = obj:getPosition(), -- vec3 (meters)
-		rot = obj:getRotation(), -- quat
+		--rot = {x = rot_x, y = rot_y, z = rot_z, w = rot_w}, -- quat
+		rot = quat(obj:getRotation()), -- quat
 		dir = obj:getDirectionVector(), -- vec3
 		dirUp = obj:getDirectionVectorUp(), -- vec3
 		vel = obj:getVelocity(), -- vec3 (meter/s)
@@ -218,13 +233,13 @@ local function collectEnergy()
 		storages[name] = {
 			energyType = storage.energyType or '', -- string
 			
-			fluidCapacity = storage.capacity or 0, -- float
-			remainingFluidCapacity = storage.remainingVolume or 0, -- float
-			leakRate = storage.currentLeakRate or 0, -- float
+			fluidCapacity = storage.capacity or 0, -- float (liters)
+			remainingFluidCapacity = storage.remainingVolume or 0, -- float (liters)
+			leakRate = storage.currentLeakRate or 0, -- float (?)
 			
-			energyCapacity = storage.energyCapacity or 0, -- float (joules?)
-			remainingEnergyCapacity = storage.storedEnergy or 0, -- float (joules?)
-			energyDensity = storage.energyDensity or 0, -- float (?)
+			energyCapacity = storage.energyCapacity or 0, -- float
+			remainingEnergyCapacity = storage.storedEnergy or 0, -- float
+			energyDensity = storage.energyDensity or 0, -- float
 		}
 	end
 	return storages
@@ -233,21 +248,55 @@ end
 -- ----------------------------------------------------------------------------
 -- Init
 local function tryInit(life_time)
-	if life_time < 1000 then
+	if INIT_STAGE == 0 then
 		return
-	else
-		if v.mpVehicleType == "R" then -- we only want to consider vehicles owned by this client
+	elseif INIT_STAGE == 1 then
+		if life_time < 1000 then return end
+		obj:queueGameEngineLua(
+			string.format('Telemetry.getInit(%d)',
+				obj:getId()
+			)
+		)
+		INIT_STAGE = 2
+		log('I', 'Telemetry - Init', 'Stage 2 - Requested init from general environment')
+	elseif INIT_STAGE == 2 then
+		if GAME_VERSION:len() == 0 then return end
+		if not IS_OWN then
 			extensions.unload("Telemetry")
+			log('E', 'Telemetry - Init', 'Init aborted. Vehicle is remote')
+			return
 		end
+		
+		GroundModels.init()
+		INITIALIZED = true
+		log('I', 'Telemetry - Init', 'Finalized')
 	end
-	
-	GroundModels.init()
-	INITIALIZED = true
+end
+
+M.setInit = function(do_readout, is_own, game_version)
+	DO_READOUT = do_readout
+	IS_OWN = is_own
+	GAME_VERSION = game_version
+end
+
+-- ----------------------------------------------------------------------------
+-- Controller
+M.setDoReadout = function(state)
+	DO_READOUT = state
+	if state then
+		log('I', 'Telemetry', 'Enabled Readouts')
+	else
+		log('I', 'Telemetry', 'Disabled Readouts')
+	end
 end
 
 -- ----------------------------------------------------------------------------
 -- Game Events
 M.onReset = function()
+	if not INITIALIZED and INIT_STAGE == 0 then
+		INIT_STAGE = 1
+		log('I', 'Telemetry - Init', 'Stage 1 - Waiting for full vehicle load')
+	end
 	LIFE_TIMER:stopAndReset()
 	FETCH_TIMER:stopAndReset()
 	obj:queueGameEngineLua(
@@ -260,7 +309,7 @@ end
 M.updateGFX = function()
 	local life_time = LIFE_TIMER:stop()
 	if not INITIALIZED then return tryInit(life_time) end
-	if life_time < 100 then return end -- readouts directly after a reset are error prone
+	if not DO_READOUT or life_time < 100 then return end -- readouts directly after a reset are error prone
 	
 	if FETCH_EVERY > 0 then
 		if FETCH_EVERY < FETCH_TIMER:stop() then return end
@@ -271,16 +320,17 @@ M.updateGFX = function()
 	local readout = {
 		_VERSION = _DATA_VERSION, -- int
 		time = math.floor(life_time), -- int (milliseconds)
-		config = collectConfig(),
-		general = collectGeneral(),
-		electrics = collectElectrics(),
-		inputs = collectInputs(),
-		wheels = collectWheels(),
-		energy = collectEnergy(),
-		--suspension = collectSuspension(),
-		--engine = collectEngine(),
-		--transmission = collectTransmission(),
+		gameVersion = GAME_VERSION
 	}
+	if COLLECT_CONFIG then readout.config = collectConfig() end
+	if COLLECT_GENERAL then readout.general = collectGeneral() end
+	if COLLECT_ELECTRICS then readout.electrics = collectElectrics() end
+	if COLLECT_INPUTS then readout.inputs = collectInputs() end
+	if COLLECT_WHEELS then readout.wheels = collectWheels() end
+	if COLLECT_ENERGY then readout.energy = collectEnergy() end
+	--if COLLECT_SUSPENSION then readout.suspension = collectSuspension() end
+	--if COLLECT_ENGINE then readout.engine = collectEngine() end
+	--if COLLECT_TRANSMISSION then readout.transmission = collectTransmission() end
 	
 	-- Save variables we need for the next readout
 	LAST_VEL = obj:getVelocity():length()

@@ -1,0 +1,11 @@
+{
+    "toggle_telemetry": {
+        "cat": "telemetry_mod",
+        "order": 0,
+        "ctx": "tlua",
+        "onDown": "if Telemetry then Telemetry.toggleReadout() end",
+        "isBasic": true,
+        "title": "Toggle Readouts",
+        "desc": "Will toggle the telemetry readouts on/off"
+    }
+}

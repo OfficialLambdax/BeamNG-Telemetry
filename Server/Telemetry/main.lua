@@ -57,6 +57,9 @@ local function newPlayer(player_id)
 end
 
 local function removePlayer(player_id)
+	for _, handle in pairs(PLAYERS[player_id].handles or {}) do
+		handle:close()
+	end
 	PLAYERS[player_id] = nil
 end
 
@@ -112,7 +115,7 @@ end
 
 -- ------------------------------------------------------------------------------------------------
 -- MP Events
-function onPlayerReady(player_id)
+function onPlayerJoin(player_id)
 	newPlayer(player_id)
 end
 
@@ -138,13 +141,13 @@ function onInit()
 	MP.RegisterEvent("telemetrySendRestart", "handleRestart")
 	
 	-- server events
-	MP.RegisterEvent("onPlayerReady", "onPlayerReady")
+	MP.RegisterEvent("onPlayerJoin", "onPlayerJoin")
 	MP.RegisterEvent("onPlayerDisconnect", "onPlayerDisconnect")
 	MP.RegisterEvent("onVehicleSpawn", "onVehicleSpawn")
 	MP.RegisterEvent("onVehicleDeleted", "onVehicleDeleted")
 	
 	-- hotreload
 	for player_id, _ in pairs(MP.GetPlayers() or {}) do
-		onPlayerReady(player_id)
+		onPlayerJoin(player_id)
 	end
 end
