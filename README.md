@@ -265,4 +265,4 @@ By default the Telemetry is disabled. To activate it you have to configure a key
 At default the Server side telemetry script that receives the telemetry from all clients stores them to files that can be found right next to your BeamMP Server's workfolder. `./readouts`. This path can be changed in the [Server side](https://github.com/OfficialLambdax/BeamNG-Telemetry/blob/main/Server/Telemetry/main.lua) script.
 
 ## Final note
-This telemetry script does by far not collect all data that BeamNG.*tech/drive* make available. If are looking for any further data then either feel free to add it yourself or open a [Issue](https://github.com/OfficialLambdax/BeamNG-Telemetry/issues)
+This telemetry script does by far not collect all data that BeamNG.*tech/drive* make available. If you are looking for any further data then either feel free to add it yourself or open a [Issue](https://github.com/OfficialLambdax/BeamNG-Telemetry/issues)

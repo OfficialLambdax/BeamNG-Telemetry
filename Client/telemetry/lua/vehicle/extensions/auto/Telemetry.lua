@@ -86,15 +86,13 @@ local function collectConfig()
 end
 
 local function collectGeneral()
-	--local rot_x, rot_y, rot_z, rot_w = obj:getRotation()
 	return {
 		pos = obj:getPosition(), -- vec3 (meters)
-		--rot = {x = rot_x, y = rot_y, z = rot_z, w = rot_w}, -- quat
 		rot = quat(obj:getRotation()), -- quat
 		dir = obj:getDirectionVector(), -- vec3
 		dirUp = obj:getDirectionVectorUp(), -- vec3
-		vel = obj:getVelocity(), -- vec3 (meter/s)
-		accel = obj:getVelocity():length() - LAST_VEL, -- float (meter/s)
+		vel = obj:getVelocity(), -- vec3 (meter/seconds)
+		accel = obj:getVelocity():length() - LAST_VEL, -- float (meter/delta) (the acceleration since the last readout)
 		altToMsl = getAltitude(obj:getPosition()), -- float (meters)
 		altToSurface = getAltitude(obj:getPosition(), getSurfaceHeight(obj:getPosition())), -- float (meters)
 		
@@ -106,8 +104,8 @@ local function collectGeneral()
 		   -x----x----x+
 		         |
 		         |
-				-y
-				180
+		        -y
+		        180
 		]]
 		heading = math.floor(getHeading(obj:getDirectionVector())), -- int
 	}
@@ -173,9 +171,9 @@ local function collectWheels()
 			slip = wheel.lastSlip, -- float
 			slipEnergy = wheel.slipEnergy, -- float (joules?)
 			treadCoef = wheel.treadCoef, -- float (0 = slick, 1 = offroad)
-			wheelSpeed = wheel.wheelSpeed, -- float (meter/s)
+			wheelSpeed = wheel.wheelSpeed, -- float (meter/seconds)
 			
-			angularVelocity = wheel.angularVelocity, -- float (meter/s)
+			angularVelocity = wheel.angularVelocity, -- float (meter/seconds)
 			contactMaterialID = wheel.contactMaterialID1, -- int (-1 means none)
 			contactMaterial = groundmodel, -- string
 			downForce = wheel.downForceRaw, -- float (newton)
@@ -320,7 +318,7 @@ M.updateGFX = function()
 	local readout = {
 		_VERSION = _DATA_VERSION, -- int
 		time = math.floor(life_time), -- int (milliseconds)
-		gameVersion = GAME_VERSION
+		gameVersion = GAME_VERSION -- string
 	}
 	if COLLECT_CONFIG then readout.config = collectConfig() end
 	if COLLECT_GENERAL then readout.general = collectGeneral() end
